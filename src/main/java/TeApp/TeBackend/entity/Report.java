@@ -24,6 +24,7 @@ public class Report {
     private Evaluation evaluation;
 
     @Lob
+    @Column(name = "pdf_content", columnDefinition = "LONGBLOB")
     private byte[] pdfContent;
 
     private LocalDateTime createdAt;
