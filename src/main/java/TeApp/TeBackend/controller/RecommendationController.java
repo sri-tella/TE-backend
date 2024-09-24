@@ -27,9 +27,16 @@ public class RecommendationController {
 
     @PostMapping("/saveSelected")
     public ResponseEntity<?> saveSelectedOptions(@RequestBody List<Map<String, Object>> selectedOptions) {
+        List<recommendationDTO> recommendations = recommendationService.getAllRecommendations();
+
+        for (recommendationDTO recommendationdto : recommendations) {
+            recommendationdto.setSelected(false);  // Mark everything as not selected
+            Recommendation recommendationEntity = recommendationService.convertToEntity(recommendationdto);
+            recommendationService.saveRecommendation(recommendationEntity);
+        }
+
         for (Map<String, Object> option : selectedOptions) {
             Long sectionId = ((Integer) option.get("section_id")).longValue();
-            List<recommendationDTO> recommendations = recommendationService.getAllRecommendations();
 
             for (recommendationDTO recommendationdto : recommendations) {
 
@@ -38,7 +45,7 @@ public class RecommendationController {
                     recommendationdto.setSelected(true);
                     Recommendation recommendationEntity = recommendationService.convertToEntity(recommendationdto);
                     recommendationService.saveRecommendation(recommendationEntity);
-//                    System.out.println("SAVED");
+//              System.out.println("SAVED");
                 }
             }
         }
