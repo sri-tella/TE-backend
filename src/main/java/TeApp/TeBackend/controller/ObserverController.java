@@ -3,6 +3,7 @@ package TeApp.TeBackend.controller;
 import TeApp.TeBackend.entity.Observer;
 import TeApp.TeBackend.service.ObserverService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,5 +34,16 @@ public class ObserverController {
     public void deleteObserver(@PathVariable Long id) {
         observerService.deleteObserver(id);
     }
+
+    @GetMapping("/email/{email}")
+    public ResponseEntity<Observer> getObserverByEmail(@PathVariable String email) {
+        Observer observer = observerService.getObserverByEmail(email);
+        if (observer != null) {
+            return ResponseEntity.ok(observer);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }
 

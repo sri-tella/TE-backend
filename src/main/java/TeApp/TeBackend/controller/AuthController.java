@@ -62,6 +62,10 @@ public class AuthController {
             // Generate and return a token (or other login success response)
             Map<String, String> response = new HashMap<>();
             response.put("message", "Login successful");
+            response.put("firstName", existingUser.getFirstName());
+            response.put("lastName", existingUser.getLastName());
+            response.put("email", existingUser.getEmail());
+            response.put("roles", existingUser.getRoles().toString());
             return ResponseEntity.ok(response);
         }
         Map<String, String> response = new HashMap<>();

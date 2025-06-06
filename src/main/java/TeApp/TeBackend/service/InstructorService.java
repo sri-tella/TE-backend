@@ -5,6 +5,7 @@ import TeApp.TeBackend.repository.InstructorRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class InstructorService {
@@ -26,6 +27,10 @@ public class InstructorService {
 
     public void deleteInstructor(Long id) {
         instructorRepository.deleteById(id);
+    }
+
+    public Optional<Instructor> findByEmail(String email) {
+        return instructorRepository.findByEmail(email);
     }
 }
 

@@ -26,23 +26,26 @@ public class IntroFormController {
     @Autowired
     private ClassInfoService classInfoService;
 
-    @PostMapping
-    public ResponseEntity<Void> submitCombinedForm(@RequestBody introFormDTO formDTO) {
-        Observer observer = new Observer();
-        observer.setFirstname(formDTO.getObserverFirstName());
-        observer.setLastname(formDTO.getObserverLastName());
-        observer.setEmail(formDTO.getObserverEmail());
-        observer = observerService.saveObserver(observer);
-
+    @PostMapping("/instructor")
+    public ResponseEntity<Void> submitIntstructorForm(@RequestBody introFormDTO formDTO) {
+        // 1. Save instructor
         Instructor instructor = new Instructor();
         instructor.setFirstname(formDTO.getInstructorFirstName());
         instructor.setLastname(formDTO.getInstructorLastName());
+        instructor.setEmail(formDTO.getInstructorEmail());
         instructor = instructorService.saveInstructor(instructor);
 
+        // 2. Save class info
         ClassInfo classInfo = new ClassInfo();
         classInfo.setTitle(formDTO.getCourseTitle());
         classInfo.setDescription(formDTO.getCourseDescription());
-        classInfo.setInstructor(instructor);
+        classInfo.setTopic(formDTO.getTopic());
+        classInfo.setDate(formDTO.getDate());
+        classInfo.setTime(formDTO.getTime());
+        classInfo.setGoal(formDTO.getGoal());
+        classInfo.setOutline(formDTO.getOutline());
+        classInfo.setHelp(formDTO.getHelp());
+        classInfo.setInstructor(instructor);  // assuming @ManyToOne mapping
         classInfoService.saveClassInfo(classInfo);
 
         return ResponseEntity.ok().build();

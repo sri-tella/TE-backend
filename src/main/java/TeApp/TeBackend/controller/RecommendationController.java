@@ -20,11 +20,6 @@ public class RecommendationController {
     @Autowired
     private RecommendationService recommendationService;
 
-//    @PostMapping
-//    public Recommendation createRecommendation(@RequestBody Recommendation recommendation) {
-//        return recommendationService.saveRecommendation(recommendation);
-//    }
-
     @PostMapping("/saveSelected")
     public ResponseEntity<?> saveSelectedOptions(@RequestBody List<Map<String, Object>> selectedOptions) {
         List<recommendationDTO> recommendations = recommendationService.getAllRecommendations();

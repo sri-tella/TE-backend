@@ -14,9 +14,9 @@ import java.util.List;
 @AllArgsConstructor
 public class evaluationDTO {
 
-//    private Long observerId; // Assuming you will send this from the frontend
-//    private Long instructorId; // Assuming you will send this from the frontend
-//    private Long classId; // Assuming you will send this from the frontend
-    private LocalDate date; // Can be sent from the frontend
-    private List<recDTO> recommendations; // Assuming you will send this
+    private Long observerId;
+    private Long instructorId;
+    private Long classId;
+    private LocalDate date;
+    private List<recDTO> recommendations;
 }

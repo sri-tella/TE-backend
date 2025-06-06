@@ -29,8 +29,9 @@ public class ReportService {
         report.setEvaluation(evaluation);
         report.setPdfContent(file.getBytes());
         report.setCreatedAt(LocalDateTime.now());
-
+        System.out.println("Saving report: " + report);
         reportRepository.save(report);
+        System.out.println("Report saved successfully.");
     }
 
     public List<Report> getAllReports() {
