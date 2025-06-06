@@ -10,11 +10,17 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class introFormDTO {
-    private String observerFirstName;
-    private String observerLastName;
-    private String observerEmail;
     private String instructorFirstName;
     private String instructorLastName;
+    private String instructorEmail;
+
     private String courseTitle;
     private String courseDescription;
+    private String topic;
+    private String date;
+    private String time;
+
+    private String goal;
+    private String outline;
+    private String help;
 }

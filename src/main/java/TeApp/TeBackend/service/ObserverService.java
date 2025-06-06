@@ -27,4 +27,9 @@ public class ObserverService {
     public void deleteObserver(Long id) {
         observerRepository.deleteById(id);
     }
+
+    public Observer getObserverByEmail(String email) {
+        return observerRepository.findByEmail(email).orElse(null);
+    }
+
 }

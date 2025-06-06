@@ -22,6 +22,19 @@ public class ClassInfo {
     private String title;
     private String description;
 
+    private String topic;
+    private String date;
+    private String time;
+
+    @Column(length = 1000)
+    private String goal;
+
+    @Column(length = 1000)
+    private String outline;
+
+    @Column(length = 1000)
+    private String help;
+
     @ManyToOne
     private Instructor instructor;
 }
