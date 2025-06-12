@@ -29,11 +29,16 @@ public class IntroFormController {
     @PostMapping("/instructor")
     public ResponseEntity<Void> submitIntstructorForm(@RequestBody introFormDTO formDTO) {
         // 1. Save instructor
-        Instructor instructor = new Instructor();
-        instructor.setFirstname(formDTO.getInstructorFirstName());
-        instructor.setLastname(formDTO.getInstructorLastName());
-        instructor.setEmail(formDTO.getInstructorEmail());
-        instructor = instructorService.saveInstructor(instructor);
+        Instructor instructor = instructorService.getInstructorByEmail(formDTO.getInstructorEmail());
+
+        if (instructor == null) {
+            // Create new only if not found
+            instructor = new Instructor();
+            instructor.setFirstname(formDTO.getInstructorFirstName());
+            instructor.setLastname(formDTO.getInstructorLastName());
+            instructor.setEmail(formDTO.getInstructorEmail());
+            instructor = instructorService.saveInstructor(instructor);
+        }
 
         // 2. Save class info
         ClassInfo classInfo = new ClassInfo();
