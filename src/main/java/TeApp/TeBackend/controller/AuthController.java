@@ -1,9 +1,13 @@
 package TeApp.TeBackend.controller;
 
+import TeApp.TeBackend.entity.Instructor;
 import TeApp.TeBackend.entity.Observer;
 import TeApp.TeBackend.entity.Roles;
 import TeApp.TeBackend.entity.Users;
+import TeApp.TeBackend.repository.InstructorRepo;
 import TeApp.TeBackend.repository.ObserverRepo;
+import TeApp.TeBackend.service.InstructorService;
+import TeApp.TeBackend.service.ObserverService;
 import TeApp.TeBackend.service.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,10 +31,19 @@ public class AuthController {
     private UsersService usersService;
 
     @Autowired
+    private ObserverService observerService;
+
+    @Autowired
+    private InstructorService instructorService;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private ObserverRepo observerRepository;
+
+    @Autowired
+    private InstructorRepo instructorRepository;
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody Users user) {
@@ -69,6 +82,18 @@ public class AuthController {
             observerRepository.save(observer);
         }
 
+        boolean isInstructor = newUser.getRoles().stream()
+                .anyMatch(role -> role.name().equalsIgnoreCase("INSTRUCTOR"));
+
+        if (isInstructor) {
+            // Save to instructors table
+            Instructor instructor = new Instructor();
+            instructor.setFirstname(newUser.getFirstName());
+            instructor.setLastname(newUser.getLastName());
+            instructor.setEmail(newUser.getEmail());
+            instructorRepository.save(instructor);
+        }
+
         return ResponseEntity.ok(newUser);
     }
 
@@ -83,6 +108,22 @@ public class AuthController {
             response.put("lastName", existingUser.getLastName());
             response.put("email", existingUser.getEmail());
             response.put("roles", existingUser.getRoles().toString());
+
+            // If role is OBSERVER
+            if (existingUser.getRoles().stream().anyMatch(role -> role.name().equals("OBSERVER"))) {
+                Observer observer = observerService.getObserverByEmail(existingUser.getEmail());
+                if (observer != null) {
+                    response.put("observerId", String.valueOf(observer.getObserver_id()));
+                }
+            }
+
+            // If role is INSTRUCTOR
+            if (existingUser.getRoles().stream().anyMatch(role -> role.name().equals("INSTRUCTOR"))) {
+                Instructor instructor = instructorService.getInstructorByEmail(existingUser.getEmail());
+                if (instructor != null) {
+                    response.put("instructorId", String.valueOf(instructor.getInstructor_id()));
+                }
+            }
             return ResponseEntity.ok(response);
         }
         Map<String, String> response = new HashMap<>();

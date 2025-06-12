@@ -1,6 +1,7 @@
 package TeApp.TeBackend.service;
 
 import TeApp.TeBackend.entity.Instructor;
+import TeApp.TeBackend.entity.Observer;
 import TeApp.TeBackend.repository.InstructorRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,10 @@ public class InstructorService {
 
     public Optional<Instructor> findByEmail(String email) {
         return instructorRepository.findByEmail(email);
+    }
+
+    public Instructor getInstructorByEmail(String email) {
+        return instructorRepository.findByEmail(email).orElse(null);
     }
 }
 
