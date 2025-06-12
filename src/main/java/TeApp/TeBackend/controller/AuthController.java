@@ -1,7 +1,9 @@
 package TeApp.TeBackend.controller;
 
+import TeApp.TeBackend.entity.Observer;
 import TeApp.TeBackend.entity.Roles;
 import TeApp.TeBackend.entity.Users;
+import TeApp.TeBackend.repository.ObserverRepo;
 import TeApp.TeBackend.service.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,9 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ObserverRepo observerRepository;
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody Users user) {
@@ -52,6 +57,18 @@ public class AuthController {
         }
 
         Users newUser = usersService.registerUser(user);
+        boolean isObserver = newUser.getRoles().stream()
+                .anyMatch(role -> role.name().equalsIgnoreCase("OBSERVER"));
+
+        if (isObserver) {
+            // Save to observers table
+            Observer observer = new Observer();
+            observer.setFirstname(newUser.getFirstName());
+            observer.setLastname(newUser.getLastName());
+            observer.setEmail(newUser.getEmail());
+            observerRepository.save(observer);
+        }
+
         return ResponseEntity.ok(newUser);
     }
 
