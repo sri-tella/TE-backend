@@ -76,7 +76,7 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> loginUser(@RequestBody Users user) {
         Users existingUser = usersService.findByEmail(user.getEmail());
         if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
-            // Generate and return a token (or other login success response)
+            // Generate and return a login success response
             Map<String, String> response = new HashMap<>();
             response.put("message", "Login successful");
             response.put("firstName", existingUser.getFirstName());
