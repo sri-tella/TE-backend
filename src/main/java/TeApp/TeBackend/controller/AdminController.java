@@ -1,8 +1,13 @@
 package TeApp.TeBackend.controller;
 
 import TeApp.TeBackend.dto.adminDTO;
+import TeApp.TeBackend.dto.roleRequestDTO;
+import TeApp.TeBackend.dto.roleRequestViewDTO;
+import TeApp.TeBackend.entity.RequestStatus;
+import TeApp.TeBackend.entity.RoleRequest;
 import TeApp.TeBackend.entity.Roles;
 import TeApp.TeBackend.entity.Users;
+import TeApp.TeBackend.repository.RoleRequestRepo;
 import TeApp.TeBackend.repository.UsersRepo;
 import TeApp.TeBackend.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import TeApp.TeBackend.service.PasswordGenerator;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/admins")
@@ -29,6 +35,9 @@ public class AdminController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private RoleRequestRepo roleRequestRepo;
 
     /**
      * Create new admin
@@ -85,14 +94,74 @@ public class AdminController {
         }).orElse("Error: User not found");
     }
 
-    @PostMapping("/test-email")
-    public String testEmail(@RequestParam String to) {
-        emailService.sendAdminWelcomeEmail(
-                "sri",
-                "Tella",
-                to,
-                "TempPass123!"
-        );
-        return "Test email sent to " + to;
+    /**
+     * This mapping is to test the email invite via postman
+     */
+//    @PostMapping("/test-email")
+//    public String testEmail(@RequestParam String to) {
+//        emailService.sendAdminWelcomeEmail(
+//                "sri",
+//                "Tella",
+//                to,
+//                "TempPass123!"
+//        );
+//        return "Test email sent to " + to;
+//    }
+
+    @PostMapping("/roleRequests/{id}/approve")
+    public String approveRequest(@PathVariable Long id) {
+        RoleRequest request = roleRequestRepo.findById(id).orElseThrow();
+        request.setStatus(RequestStatus.APPROVED);
+        roleRequestRepo.save(request);
+
+        Users user = request.getUser();
+        user.getRoles().add(request.getRequestedRole());
+        userRepository.save(user);
+
+        return "Request approved";
     }
+
+    @GetMapping("/roleRequests")
+    public List<roleRequestViewDTO> getPendingRequests() {
+        return roleRequestRepo.findByStatus(RequestStatus.PENDING)
+            .stream()
+            .map(request -> {
+                roleRequestViewDTO dto = new roleRequestViewDTO();
+                dto.setId(request.getId());
+                dto.setRequestedRole(request.getRequestedRole());
+
+                Users user = request.getUser();
+                dto.setFirstName(user.getFirstName());
+                dto.setLastName(user.getLastName());
+                dto.setEmail(user.getEmail());
+
+                return dto;
+            })
+            .toList();
+    }
+
+    @PostMapping("/roleRequests")
+    public String requestDualRole(@RequestBody roleRequestDTO dto) {
+        System.out.println(userRepository.existsById(dto.getId()));
+
+        Optional<Users> userOptional = userRepository.findById(dto.getId());
+        if(userOptional.isEmpty()) {
+            return " User not found";
+        }
+
+
+        if (roleRequestRepo.existsByUserAndStatus(userOptional, RequestStatus.PENDING)) {
+            return "You already have a pending request";
+        }
+
+        RoleRequest request = new RoleRequest();
+        Users user = userOptional.get();
+        request.setUser(user);
+        request.setRequestedRole(dto.getRequestedRole());
+        request.setStatus(RequestStatus.PENDING);
+        roleRequestRepo.save(request);
+
+        return "Request submitted";
+    }
+
 }
