@@ -1,5 +1,6 @@
 package TeApp.TeBackend.controller;
 
+import TeApp.TeBackend.dto.changePasswordDTO;
 import TeApp.TeBackend.entity.Instructor;
 import TeApp.TeBackend.entity.Observer;
 import TeApp.TeBackend.entity.Roles;
@@ -104,6 +105,7 @@ public class AuthController {
             // Generate and return a login success response
             Map<String, String> response = new HashMap<>();
             response.put("message", "Login successful");
+            response.put("id", existingUser.getId().toString());
             response.put("firstName", existingUser.getFirstName());
             response.put("lastName", existingUser.getLastName());
             response.put("email", existingUser.getEmail());
@@ -129,5 +131,15 @@ public class AuthController {
         Map<String, String> response = new HashMap<>();
         response.put("error", "Invalid credentials");
         return ResponseEntity.status(401).body(response);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody changePasswordDTO dto) {
+        boolean result = usersService.changePassword(dto);
+        if (result) {
+            return ResponseEntity.ok("Password changed successfully");
+        } else {
+            return ResponseEntity.badRequest().body("Failed to change password");
+        }
     }
 }
