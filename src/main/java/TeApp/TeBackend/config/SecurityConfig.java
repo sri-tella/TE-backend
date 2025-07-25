@@ -17,7 +17,7 @@ public class SecurityConfig {
         http
                 .csrf().disable()
                 .authorizeRequests()
-                .requestMatchers("/api/admins/**", "/api/auth/**", "api/options/saveSelected", "api/options", "api/saveSelectedRecommendations", "api/form/**","/api/evaluations/**", "api/reports/save-pdf", "api/reports","/api/reports/**","/api/observers/**","api/classes/**" ).permitAll() // Allow access to these endpoints without authentication
+                .requestMatchers("/api/admins/**", "/api/auth/**", "api/options/saveSelected", "api/options", "api/saveSelectedRecommendations", "api/form/**","/api/evaluations/**", "api/reports/save-pdf", "api/reports","/api/reports/**","/api/observers/**","api/classes/**", "/api/notifications/**" ).permitAll() // Allow access to these endpoints without authentication
                 .anyRequest().authenticated(); // All other requests require authentication
         return http.build();
     }

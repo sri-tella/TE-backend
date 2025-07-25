@@ -3,10 +3,8 @@ package TeApp.TeBackend.controller;
 import TeApp.TeBackend.dto.adminDTO;
 import TeApp.TeBackend.dto.roleRequestDTO;
 import TeApp.TeBackend.dto.roleRequestViewDTO;
-import TeApp.TeBackend.entity.RequestStatus;
-import TeApp.TeBackend.entity.RoleRequest;
-import TeApp.TeBackend.entity.Roles;
-import TeApp.TeBackend.entity.Users;
+import TeApp.TeBackend.entity.*;
+import TeApp.TeBackend.repository.NotificationRepo;
 import TeApp.TeBackend.repository.RoleRequestRepo;
 import TeApp.TeBackend.repository.UsersRepo;
 import TeApp.TeBackend.service.EmailService;
@@ -39,6 +37,9 @@ public class AdminController {
     @Autowired
     private RoleRequestRepo roleRequestRepo;
 
+    @Autowired
+    private NotificationRepo notificationRepo;
+
     /**
      * Create new admin
      */
@@ -50,7 +51,6 @@ public class AdminController {
 
         String tempPassword = passwordGenerator.generate();
         String encodedPassword = passwordEncoder.encode(tempPassword);
-        System.out.println(tempPassword);
 
         Users user = new Users();
         user.setFirstName(newAdminDTO.getFirstName());
@@ -60,6 +60,11 @@ public class AdminController {
         user.getRoles().add(Roles.ADMIN);
 
         userRepository.save(user);
+
+        Notification notification = new Notification();
+        notification.setMessage("New admin " + user.getFirstName() + " " + user.getLastName() + " has been added.");
+        notification.setTargetRole(Roles.ADMIN);
+        notificationRepo.save(notification);
 
         emailService.sendAdminWelcomeEmail(
                 user.getFirstName(),
@@ -118,6 +123,11 @@ public class AdminController {
         user.getRoles().add(request.getRequestedRole());
         userRepository.save(user);
 
+        Notification notification = new Notification();
+        notification.setMessage("Your role request has been approved! You now have " + request.getRequestedRole() + " access.");
+        notification.setTargetRole(Roles.INSTRUCTOR);
+        notificationRepo.save(notification);
+
         return "Request approved";
     }
 
@@ -160,6 +170,11 @@ public class AdminController {
         request.setRequestedRole(dto.getRequestedRole());
         request.setStatus(RequestStatus.PENDING);
         roleRequestRepo.save(request);
+
+        Notification notification = new Notification();
+        notification.setMessage("Role request pending from " + user.getFirstName() + " " + user.getLastName());
+        notification.setTargetRole(Roles.ADMIN);
+        notificationRepo.save(notification);
 
         return "Request submitted";
     }

@@ -1,9 +1,8 @@
 package TeApp.TeBackend.controller;
 
 import TeApp.TeBackend.dto.introFormDTO;
-import TeApp.TeBackend.entity.ClassInfo;
-import TeApp.TeBackend.entity.Instructor;
-import TeApp.TeBackend.entity.Observer;
+import TeApp.TeBackend.entity.*;
+import TeApp.TeBackend.repository.NotificationRepo;
 import TeApp.TeBackend.service.ClassInfoService;
 import TeApp.TeBackend.service.InstructorService;
 import TeApp.TeBackend.service.ObserverService;
@@ -26,6 +25,10 @@ public class IntroFormController {
     @Autowired
     private ClassInfoService classInfoService;
 
+
+    @Autowired
+    private NotificationRepo notificationRepo;
+
     @PostMapping("/instructor")
     public ResponseEntity<Void> submitIntstructorForm(@RequestBody introFormDTO formDTO) {
         // 1. Save instructor
@@ -40,6 +43,11 @@ public class IntroFormController {
             instructor = instructorService.saveInstructor(instructor);
         }
 
+        Notification notification = new Notification();
+        notification.setMessage("New Instructor " + instructor.getFirstname() + " has been added.");
+        notification.setTargetRole(Roles.OBSERVER);
+        notificationRepo.save(notification);
+
         // 2. Save class info
         ClassInfo classInfo = new ClassInfo();
         classInfo.setTitle(formDTO.getCourseTitle());
@@ -50,7 +58,7 @@ public class IntroFormController {
         classInfo.setGoal(formDTO.getGoal());
         classInfo.setOutline(formDTO.getOutline());
         classInfo.setHelp(formDTO.getHelp());
-        classInfo.setInstructor(instructor);  // assuming @ManyToOne mapping
+        classInfo.setInstructor(instructor);
         classInfoService.saveClassInfo(classInfo);
 
         return ResponseEntity.ok().build();
