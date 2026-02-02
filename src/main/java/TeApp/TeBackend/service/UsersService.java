@@ -1,6 +1,5 @@
 package TeApp.TeBackend.service;
 
-import TeApp.TeBackend.dto.changePasswordDTO;
 import TeApp.TeBackend.entity.Users;
 import TeApp.TeBackend.repository.UsersRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,24 +22,5 @@ public class UsersService {
 
     public Users findByEmail(String email) {
         return usersRepository.findByEmail(email).orElse(null);
-    }
-
-    public boolean changePassword(changePasswordDTO dto) {
-        Users user = findByEmail(dto.getEmail());
-        if (user == null) {
-            return false;
-        }
-
-        if(!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
-            return false;
-        }
-
-        if(!dto.getNewPassword().equals(dto.getConfirmPassword())) {
-            return false;
-        }
-
-        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        usersRepository.save(user);
-        return true;
     }
 }

@@ -48,6 +48,7 @@ public class ClassInfoController {
             classMap.put("classId", classInfo.getClass_id());
             classMap.put("title", classInfo.getTitle());
             classMap.put("description", classInfo.getDescription());
+            classMap.put("isArchived", classInfo.isArchived());
 
             Instructor instructor = classInfo.getInstructor();
             if (instructor != null) {
@@ -61,6 +62,15 @@ public class ClassInfoController {
         }
 
         return response;
+    }
+
+    @PutMapping("/{id}/archive")
+    public void setArchiveStatus(@PathVariable Long id, @RequestBody boolean isArchived) {
+        ClassInfo classInfo = classInfoService.getClassById(id);
+        if (classInfo != null) {
+            classInfo.setArchived(isArchived); 
+            classInfoService.saveClassInfo(classInfo);
+        }
     }
 }
 

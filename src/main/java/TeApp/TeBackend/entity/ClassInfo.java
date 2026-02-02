@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
@@ -37,4 +37,10 @@ public class ClassInfo {
 
     @ManyToOne
     private Instructor instructor;
+
+    @OneToMany(mappedBy = "className", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Evaluation> evaluations;
+
+    @Column(columnDefinition = "boolean default false")
+    private boolean isArchived;
 }
