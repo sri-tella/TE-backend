@@ -1,5 +1,6 @@
 package TeApp.TeBackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,6 +40,7 @@ public class ClassInfo {
     private Instructor instructor;
 
     @OneToMany(mappedBy = "className", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Evaluation> evaluations;
 
     @Column(columnDefinition = "boolean default false")
