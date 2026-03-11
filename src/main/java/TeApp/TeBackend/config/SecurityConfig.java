@@ -15,11 +15,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors().and() // Add this line to enable CORS in Spring Security
-                .csrf().disable() 
-                .authorizeRequests()
-                .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/options/saveSelected", "/api/options", "/api/saveSelectedRecommendations", "/api/form/**","/api/evaluations/**", "/api/reports/save-pdf", "/api/reports","/api/reports/**","/api/observers/**","/api/classes/**" ).permitAll() // Allow access to these endpoints without authentication
-                .anyRequest().authenticated(); // All other requests require authentication
+                .cors(cors -> cors.configure(http))
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/options/saveSelected", "/api/options", "/api/saveSelectedRecommendations", "/api/form/**", "/api/evaluations/**", "/api/reports/save-pdf", "/api/reports", "/api/reports/**", "/api/observers/**", "/api/classes/**").permitAll()
+                        .anyRequest().authenticated()
+                );
         return http.build();
     }
 
