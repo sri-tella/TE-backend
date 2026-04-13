@@ -36,6 +36,9 @@ public class Evaluation {
 
     private LocalDate date;
 
+    @Column(columnDefinition = "TEXT")
+    private String activityLog;
+
     @OneToMany(mappedBy = "evaluation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReportRecommendation> reportRecommendations;
     

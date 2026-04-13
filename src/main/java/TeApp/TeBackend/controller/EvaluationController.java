@@ -41,6 +41,15 @@ public class EvaluationController {
         return evaluationService.getAllEvaluations();
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Evaluation> getEvaluationById(@PathVariable Long id) {
+        Evaluation evaluation = evaluationService.getEvaluationById(id);
+        if (evaluation == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(evaluation);
+    }
+
 
     @PostMapping("/save")
     public ResponseEntity<Evaluation> createEvaluation(@RequestBody evaluationDTO evaluationdto) {
@@ -103,9 +112,18 @@ public class EvaluationController {
         evaluation.setDate(dto.getDate());
 
         Evaluation saved = evaluationRepository.save(evaluation);
-        Map<String, Object> response = new HashMap<>();
-        response.put("evaluationId", saved.getEvaluation_id());
+        return ResponseEntity.ok(saved);
+    }
 
+    @PutMapping("/{id}/activity-log")
+    public ResponseEntity<Evaluation> updateActivityLog(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        Evaluation evaluation = evaluationService.getEvaluationById(id);
+        if (evaluation == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        evaluation.setActivityLog(body.get("activityLog"));
+        Evaluation saved = evaluationRepository.save(evaluation);
         return ResponseEntity.ok(saved);
     }
 }
