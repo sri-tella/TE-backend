@@ -41,9 +41,10 @@ public class ReportController {
     @PostMapping("/save-pdf")
     public ResponseEntity<String> savePdfReport(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("evaluationId") Long evaluationId) {
+            @RequestParam("evaluationId") Long evaluationId,
+            @RequestParam(value = "reportContent", required = false) String reportContent) {
         try {
-            reportService.savePdfReport(file, evaluationId);
+            reportService.savePdfReport(file, evaluationId, reportContent);
             return ResponseEntity.ok("PDF report saved successfully!");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving PDF report.");
@@ -52,7 +53,6 @@ public class ReportController {
 
     @GetMapping("/{reportId}/pdf")
     public ResponseEntity<byte[]> getReportPdf(@PathVariable Long reportId) {
-        // Logic to fetch the PDF content from the database
         Report report = reportService.getReportById(reportId);
         byte[] pdfContent = report.getPdfContent();
 

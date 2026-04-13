@@ -53,28 +53,23 @@ public class EvaluationController {
 
     @PostMapping("/save")
     public ResponseEntity<Evaluation> createEvaluation(@RequestBody evaluationDTO evaluationdto) {
-        // Retrieve associated entities from the database
         Observer observer = observerService.getObserverById(evaluationdto.getObserverId());
         Instructor instructor = instructorService.getInstructorById(evaluationdto.getInstructorId());
         ClassInfo classInfo = classInfoService.getClassById(evaluationdto.getClassId());
 
-        // Check if any of the entities were not found
         if (observer == null || instructor == null || classInfo == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        // Create a new Evaluation entity
         Evaluation evaluation = new Evaluation();
         evaluation.setObserver(observer);
         evaluation.setInstructor(instructor);
         evaluation.setClassName(classInfo);
         evaluation.setDate(evaluationdto.getDate());
 
-        // Set the report recommendations from the DTO
         List<ReportRecommendation> reportRecommendations = convertDTOtoReportRecommendations(evaluationdto.getRecommendations(), evaluation);
         evaluation.setReportRecommendations(reportRecommendations);
 
-        // Save the evaluation to the database
         Evaluation savedEvaluation = evaluationRepository.save(evaluation);
 
         return ResponseEntity.ok(savedEvaluation);

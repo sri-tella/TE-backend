@@ -27,6 +27,9 @@ public class Report {
     @Column(name = "pdf_content", columnDefinition = "LONGBLOB")
     private byte[] pdfContent;
 
+    @Column(name = "report_content", columnDefinition = "LONGTEXT")
+    private String reportContent;
+
     private LocalDateTime createdAt;
 
 }

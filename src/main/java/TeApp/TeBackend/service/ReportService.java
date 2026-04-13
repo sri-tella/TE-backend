@@ -21,13 +21,14 @@ public class ReportService {
     @Autowired
     private EvaluationRepo evaluationRepository;
 
-    public void savePdfReport(MultipartFile file, Long evaluationId) throws IOException {
+    public void savePdfReport(MultipartFile file, Long evaluationId, String reportContent) throws IOException {
         Evaluation evaluation = evaluationRepository.findById(evaluationId)
                 .orElseThrow(() -> new RuntimeException("Evaluation not found"));
 
         Report report = new Report();
         report.setEvaluation(evaluation);
         report.setPdfContent(file.getBytes());
+        report.setReportContent(reportContent);
         report.setCreatedAt(LocalDateTime.now());
         System.out.println("Saving report: " + report);
         reportRepository.save(report);
