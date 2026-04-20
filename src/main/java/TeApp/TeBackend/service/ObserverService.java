@@ -21,6 +21,7 @@ public class ObserverService {
     }
 
     public Observer getObserverById(Long id) {
+        if (id == null) return null;
         return observerRepository.findById(id).orElse(null);
     }
 

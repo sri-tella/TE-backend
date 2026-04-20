@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import TeApp.TeBackend.service.PasswordGenerator;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -112,6 +113,27 @@ public class AdminController {
 //        );
 //        return "Test email sent to " + to;
 //    }
+
+    @GetMapping("/observers")
+    public List<Users> getAllObservers() {
+        return userRepository.findAllObservers();
+    }
+
+    @GetMapping("/users/{id}/content-permission")
+    public ResponseEntity<?> getContentPermission(@PathVariable Long id) {
+        return userRepository.findById(id)
+                .map(user -> ResponseEntity.ok(Map.of("canEditContent", user.isCanEditContent())))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/users/{id}/content-permission")
+    public ResponseEntity<?> setContentPermission(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
+        return userRepository.findById(id).map(user -> {
+            user.setCanEditContent(body.get("canEditContent"));
+            userRepository.save(user);
+            return ResponseEntity.ok(Map.of("canEditContent", user.isCanEditContent()));
+        }).orElse(ResponseEntity.notFound().build());
+    }
 
     @PostMapping("/roleRequests/{id}/approve")
     public String approveRequest(@PathVariable Long id) {

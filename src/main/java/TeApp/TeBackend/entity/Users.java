@@ -38,6 +38,6 @@ public class Users {
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     private Set<Roles> roles = new HashSet<>();
 
-    // Getters and Setters
+    private boolean canEditContent = false;
 }
 

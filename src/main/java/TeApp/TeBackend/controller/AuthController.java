@@ -104,25 +104,28 @@ public class AuthController {
             // Generate and return a login success response
             Map<String, String> response = new HashMap<>();
             response.put("message", "Login successful");
+            response.put("userId", String.valueOf(existingUser.getId()));
             response.put("firstName", existingUser.getFirstName());
             response.put("lastName", existingUser.getLastName());
             response.put("email", existingUser.getEmail());
             response.put("roles", existingUser.getRoles().toString());
+            response.put("canEditContent", String.valueOf(existingUser.isCanEditContent()));
 
-            // If role is OBSERVER
-            if (existingUser.getRoles().stream().anyMatch(role -> role.name().equals("OBSERVER"))) {
-                Observer observer = observerService.getObserverByEmail(existingUser.getEmail());
-                if (observer != null) {
-                    response.put("observerId", String.valueOf(observer.getObserver_id()));
-                }
+            Observer observer = observerService.getObserverByEmail(existingUser.getEmail());
+            if (observer == null && existingUser.getRoles().stream().anyMatch(r -> r.name().equals("ADMIN"))) {
+                observer = new Observer();
+                observer.setFirstname(existingUser.getFirstName());
+                observer.setLastname(existingUser.getLastName());
+                observer.setEmail(existingUser.getEmail());
+                observerRepository.save(observer);
+            }
+            if (observer != null) {
+                response.put("observerId", String.valueOf(observer.getObserver_id()));
             }
 
-            // If role is INSTRUCTOR
-            if (existingUser.getRoles().stream().anyMatch(role -> role.name().equals("INSTRUCTOR"))) {
-                Instructor instructor = instructorService.getInstructorByEmail(existingUser.getEmail());
-                if (instructor != null) {
-                    response.put("instructorId", String.valueOf(instructor.getInstructor_id()));
-                }
+            Instructor instructor = instructorService.getInstructorByEmail(existingUser.getEmail());
+            if (instructor != null) {
+                response.put("instructorId", String.valueOf(instructor.getInstructor_id()));
             }
             return ResponseEntity.ok(response);
         }
