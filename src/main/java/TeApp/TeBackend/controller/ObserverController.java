@@ -38,7 +38,6 @@ public class ObserverController {
     @GetMapping("/email/{email}")
     public ResponseEntity<Observer> getObserverByEmail(@PathVariable String email) {
         Observer observer = observerService.getObserverByEmail(email);
-        System.out.println(observer.getEmail());
         if (observer != null) {
             return ResponseEntity.ok(observer);
         } else {

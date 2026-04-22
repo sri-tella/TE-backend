@@ -100,20 +100,6 @@ public class AdminController {
         }).orElse("Error: User not found");
     }
 
-    /**
-     * This mapping is to test the email invite via postman
-     */
-//    @PostMapping("/test-email")
-//    public String testEmail(@RequestParam String to) {
-//        emailService.sendAdminWelcomeEmail(
-//                "sri",
-//                "Tella",
-//                to,
-//                "TempPass123!"
-//        );
-//        return "Test email sent to " + to;
-//    }
-
     @GetMapping("/observers")
     public List<Users> getAllObservers() {
         return userRepository.findAllObservers();
@@ -174,8 +160,6 @@ public class AdminController {
 
     @PostMapping("/roleRequests")
     public String requestDualRole(@RequestBody roleRequestDTO dto) {
-        System.out.println(userRepository.existsById(dto.getId()));
-
         Optional<Users> userOptional = userRepository.findById(dto.getId());
         if(userOptional.isEmpty()) {
             return " User not found";

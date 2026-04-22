@@ -36,11 +36,9 @@ public class RecommendationController {
             for (recommendationDTO recommendationdto : recommendations) {
 
                 if(sectionId.equals(recommendationdto.getSectionId())) {
-//                    System.out.println("inside if");
                     recommendationdto.setSelected(true);
                     Recommendation recommendationEntity = recommendationService.convertToEntity(recommendationdto);
                     recommendationService.saveRecommendation(recommendationEntity);
-//              System.out.println("SAVED");
                 }
             }
         }

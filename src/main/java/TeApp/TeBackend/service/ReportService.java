@@ -30,9 +30,7 @@ public class ReportService {
         report.setPdfContent(file.getBytes());
         report.setReportContent(reportContent);
         report.setCreatedAt(LocalDateTime.now());
-        System.out.println("Saving report: " + report);
         reportRepository.save(report);
-        System.out.println("Report saved successfully.");
     }
 
     public List<Report> getAllReports() {
