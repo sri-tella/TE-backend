@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local environment (secrets managed via Railway) ###
+src/main/resources/application-local.properties
