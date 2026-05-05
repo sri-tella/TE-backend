@@ -188,6 +188,7 @@ By default, these frontend origins are allowed:
 
 ```
 https://teachingeval.netlify.app
+https://teaching-evaluation.netlify.app
 http://localhost:3000
 http://localhost:5173
 ```
