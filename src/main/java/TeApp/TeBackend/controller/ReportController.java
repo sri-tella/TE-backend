@@ -1,5 +1,6 @@
 package TeApp.TeBackend.controller;
 
+import TeApp.TeBackend.dto.reportSummaryDTO;
 import TeApp.TeBackend.entity.Evaluation;
 import TeApp.TeBackend.entity.Report;
 import TeApp.TeBackend.repository.EvaluationRepo;
@@ -24,7 +25,7 @@ public class ReportController {
     private ReportService reportService;
 
     @GetMapping
-    public List<Report> getAllReports() {
+    public List<reportSummaryDTO> getAllReports() {
         return reportService.getAllReports();
     }
 

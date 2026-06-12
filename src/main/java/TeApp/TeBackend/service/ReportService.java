@@ -1,5 +1,6 @@
 package TeApp.TeBackend.service;
 
+import TeApp.TeBackend.dto.reportSummaryDTO;
 import TeApp.TeBackend.entity.Evaluation;
 import TeApp.TeBackend.entity.Report;
 import TeApp.TeBackend.repository.EvaluationRepo;
@@ -33,8 +34,8 @@ public class ReportService {
         reportRepository.save(report);
     }
 
-    public List<Report> getAllReports() {
-        return reportRepository.findAll();
+    public List<reportSummaryDTO> getAllReports() {
+        return reportRepository.findAllSummaries();
     }
 
     public Report getReportById(Long id) {
