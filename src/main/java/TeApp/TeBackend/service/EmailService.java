@@ -1,21 +1,69 @@
 package TeApp.TeBackend.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private static final String BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+
+    @Value("${brevo.api.key}")
+    private String apiKey;
+
+    @Value("${brevo.sender.email}")
+    private String senderEmail;
+
+    @Value("${brevo.sender.name:Peer Lens}")
+    private String senderName;
+
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private void send(String toEmail, String subject, String textContent) {
+        Map<String, Object> payload = Map.of(
+                "sender", Map.of("name", senderName, "email", senderEmail),
+                "to", List.of(Map.of("email", toEmail)),
+                "subject", subject,
+                "textContent", textContent
+        );
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BREVO_API_URL))
+                    .timeout(Duration.ofSeconds(10))
+                    .header("api-key", apiKey)
+                    .header("Content-Type", "application/json")
+                    .header("accept", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(payload)))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 300) {
+                throw new RuntimeException("Brevo API error " + response.statusCode() + ": " + response.body());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to send email via Brevo", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Email send interrupted", e);
+        }
+    }
 
     public void sendAdminWelcomeEmail(String firstName, String lastName, String toEmail, String password) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("Admin Account Created");
-        message.setText(
+        send(toEmail, "Admin Account Created",
                 "Hello " + firstName + " " + lastName + ",\n\n" +
                         "You have been granted ADMIN access in TeachApp.\n\n" +
                         "Your login credentials:\n" +
@@ -24,34 +72,25 @@ public class EmailService {
                         "Please log in and change your password immediately.\n\n" +
                         "Thank you!"
         );
-        mailSender.send(message);
     }
 
     public void sendInstructorFormCompleteEmail(String observerEmail, String instructorName) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(observerEmail);
-        message.setSubject("Session Questionnaire Completed – Ready for Observation");
-        message.setText(
+        send(observerEmail, "Session Questionnaire Completed – Ready for Observation",
                 "Hello,\n\n" +
                         "Instructor " + instructorName + " has completed their pre-observation questionnaire.\n\n" +
                         "Their session details are now available in the system. You can proceed with scheduling or conducting the observation.\n\n" +
                         "Log in to Peer Lens to review the session information.\n\n" +
                         "Thank you!"
         );
-        mailSender.send(message);
     }
 
     public void sendObservationCompleteEmail(String instructorEmail, String instructorName, String observerName) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(instructorEmail);
-        message.setSubject("Your Observation Has Been Completed");
-        message.setText(
+        send(instructorEmail, "Your Observation Has Been Completed",
                 "Hello " + instructorName + ",\n\n" +
                         "Observer " + observerName + " has completed the observation of your session.\n\n" +
                         "Your evaluation report and recommendations will be available shortly in Peer Lens.\n\n" +
                         "Log in to your account to view the results.\n\n" +
                         "Thank you!"
         );
-        mailSender.send(message);
     }
 }
