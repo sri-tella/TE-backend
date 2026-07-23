@@ -14,4 +14,7 @@ public interface UsersRepo extends JpaRepository<Users, Long> {
 
     @Query("SELECT u FROM Users u JOIN u.roles r WHERE r = 'OBSERVER'")
     List<Users> findAllObservers();
+
+    @Query("SELECT DISTINCT u FROM Users u JOIN u.roles r WHERE r != 'ADMIN'")
+    List<Users> findAllNonAdmins();
 }
