@@ -107,7 +107,9 @@ public class AdminController {
     // ── List all non-admin users ──────────────────────────────────────────
     @GetMapping("/all-users")
     public List<Map<String, Object>> getAllUsers() {
-        return userRepository.findAllNonAdmins().stream().map(u -> {
+        return userRepository.findAll().stream()
+                .filter(u -> !u.getRoles().contains(Roles.ADMIN))
+                .map(u -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", u.getId());
             map.put("firstName", u.getFirstName());
