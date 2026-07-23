@@ -62,6 +62,7 @@ public class AdminController {
         Set<Roles> roles = new HashSet<>();
         roles.add(Roles.valueOf(role));
         user.setRoles(roles);
+        user.setActiveRole(role);
         userRepository.save(user);
 
         if (role.equals("OBSERVER")) {
