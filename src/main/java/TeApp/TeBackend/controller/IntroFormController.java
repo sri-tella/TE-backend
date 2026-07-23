@@ -5,18 +5,19 @@ import TeApp.TeBackend.entity.ClassInfo;
 import TeApp.TeBackend.entity.Instructor;
 import TeApp.TeBackend.entity.Observer;
 import TeApp.TeBackend.service.ClassInfoService;
+import TeApp.TeBackend.service.EmailService;
 import TeApp.TeBackend.service.InstructorService;
 import TeApp.TeBackend.service.ObserverService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/form")
 public class IntroFormController {
+
     @Autowired
     private ObserverService observerService;
 
@@ -26,13 +27,14 @@ public class IntroFormController {
     @Autowired
     private ClassInfoService classInfoService;
 
+    @Autowired
+    private EmailService emailService;
+
     @PostMapping("/instructor")
     public ResponseEntity<Void> submitIntstructorForm(@RequestBody introFormDTO formDTO) {
-        // 1. Save instructor
         Instructor instructor = instructorService.getInstructorByEmail(formDTO.getInstructorEmail());
 
         if (instructor == null) {
-            // Create new only if not found
             instructor = new Instructor();
             instructor.setFirstname(formDTO.getInstructorFirstName());
             instructor.setLastname(formDTO.getInstructorLastName());
@@ -40,7 +42,6 @@ public class IntroFormController {
             instructor = instructorService.saveInstructor(instructor);
         }
 
-        // 2. Save class info
         ClassInfo classInfo = new ClassInfo();
         classInfo.setTitle(formDTO.getCourseTitle());
         classInfo.setDescription(formDTO.getCourseDescription());
@@ -50,10 +51,22 @@ public class IntroFormController {
         classInfo.setGoal(formDTO.getGoal());
         classInfo.setOutline(formDTO.getOutline());
         classInfo.setHelp(formDTO.getHelp());
-        classInfo.setInstructor(instructor);  // assuming @ManyToOne mapping
+        classInfo.setInstructor(instructor);
         classInfoService.saveClassInfo(classInfo);
 
         return ResponseEntity.ok().build();
     }
-}
 
+    @PostMapping("/instructor/notify-observer")
+    public ResponseEntity<?> notifyObserver(@RequestBody Map<String, String> body) {
+        String observerEmail = body.get("observerEmail");
+        String instructorName = body.get("instructorName");
+
+        if (observerEmail == null || observerEmail.isBlank()) {
+            return ResponseEntity.badRequest().body("Observer email is required");
+        }
+
+        emailService.sendInstructorFormCompleteEmail(observerEmail, instructorName);
+        return ResponseEntity.ok(Map.of("message", "Notification sent to observer"));
+    }
+}

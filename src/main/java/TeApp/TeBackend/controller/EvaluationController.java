@@ -4,10 +4,11 @@ import TeApp.TeBackend.dto.evaluationDTO;
 import TeApp.TeBackend.dto.recDTO;
 import TeApp.TeBackend.entity.*;
 import TeApp.TeBackend.repository.EvaluationRepo;
-import TeApp.TeBackend.service.EvaluationService;
-import TeApp.TeBackend.service.ObserverService;
-import TeApp.TeBackend.service.InstructorService;
 import TeApp.TeBackend.service.ClassInfoService;
+import TeApp.TeBackend.service.EmailService;
+import TeApp.TeBackend.service.EvaluationService;
+import TeApp.TeBackend.service.InstructorService;
+import TeApp.TeBackend.service.ObserverService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,9 @@ public class EvaluationController {
 
     @Autowired
     private ClassInfoService classInfoService;
+
+    @Autowired
+    private EmailService emailService;
 
     @GetMapping
     public List<Evaluation> getEvaluations() {
@@ -116,9 +120,30 @@ public class EvaluationController {
         if (evaluation == null) {
             return ResponseEntity.notFound().build();
         }
-        
         evaluation.setActivityLog(body.get("activityLog"));
         Evaluation saved = evaluationRepository.save(evaluation);
         return ResponseEntity.ok(saved);
+    }
+
+    @PostMapping("/notify-instructor")
+    public ResponseEntity<?> notifyInstructor(@RequestBody Map<String, String> body) {
+        String instructorIdStr = body.get("instructorId");
+        String observerName = body.get("observerName");
+
+        if (instructorIdStr == null) {
+            return ResponseEntity.badRequest().body("instructorId is required");
+        }
+
+        Instructor instructor = instructorService.getInstructorById(Long.parseLong(instructorIdStr));
+        if (instructor == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        emailService.sendObservationCompleteEmail(
+                instructor.getEmail(),
+                instructor.getFirstname() + " " + instructor.getLastname(),
+                observerName
+        );
+        return ResponseEntity.ok(Map.of("message", "Notification sent to instructor"));
     }
 }
