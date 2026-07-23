@@ -33,6 +33,10 @@ public class EmailService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private void send(String toEmail, String subject, String textContent) {
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException("BREVO_API_KEY is not configured");
+        }
+
         Map<String, Object> payload = Map.of(
                 "sender", Map.of("name", senderName, "email", senderEmail),
                 "to", List.of(Map.of("email", toEmail)),
