@@ -16,12 +16,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import TeApp.TeBackend.service.PasswordGenerator;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admins")
@@ -107,19 +109,23 @@ public class AdminController {
     // ── List all non-admin users ──────────────────────────────────────────
     @GetMapping("/all-users")
     public List<Map<String, Object>> getAllUsers() {
-        return userRepository.findAll().stream()
-                .filter(u -> !u.getRoles().contains(Roles.ADMIN))
-                .map(u -> {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Users u : userRepository.findAll()) {
+            if (u.getRoles().contains(Roles.ADMIN)) continue;
             Map<String, Object> map = new HashMap<>();
             map.put("id", u.getId());
             map.put("firstName", u.getFirstName());
             map.put("lastName", u.getLastName());
             map.put("email", u.getEmail());
-            map.put("roles", u.getRoles().stream().map(Enum::name).toList());
+            List<String> roleNames = u.getRoles().stream()
+                    .map(r -> r.name())
+                    .collect(Collectors.toList());
+            map.put("roles", roleNames);
             map.put("canSwitchRoles", u.getRoles().contains(Roles.OBSERVER) && u.getRoles().contains(Roles.INSTRUCTOR));
             map.put("canEditContent", u.isCanEditContent());
-            return map;
-        }).toList();
+            result.add(map);
+        }
+        return result;
     }
 
     // ── Toggle role switching (grant/revoke dual role) ────────────────────
@@ -221,7 +227,7 @@ public class AdminController {
             dto.setLastName(user.getLastName());
             dto.setEmail(user.getEmail());
             return dto;
-        }).toList();
+        }).collect(Collectors.toList());
     }
 
     @PostMapping("/roleRequests")
