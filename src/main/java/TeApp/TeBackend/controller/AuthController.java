@@ -146,9 +146,31 @@ public class AuthController {
     @PatchMapping("/users/{id}/active-role")
     public ResponseEntity<?> setActiveRole(@PathVariable Long id, @RequestBody Map<String, String> body) {
         return usersRepo.findById(id).map(u -> {
-            u.setActiveRole(body.get("activeRole"));
+            String requestedRole = body.get("activeRole");
+            Roles role;
+            try {
+                role = Roles.valueOf(requestedRole);
+            } catch (IllegalArgumentException | NullPointerException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid role");
+            }
+            if (!u.getRoles().contains(role)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User does not have the " + requestedRole + " role");
+            }
+
+            u.setActiveRole(requestedRole);
             usersRepo.save(u);
-            return ResponseEntity.ok(Map.of("activeRole", u.getActiveRole()));
+
+            Map<String, String> response = new HashMap<>();
+            response.put("activeRole", u.getActiveRole());
+            Observer observer = observerService.getObserverByEmail(u.getEmail());
+            if (observer != null) {
+                response.put("observerId", String.valueOf(observer.getObserver_id()));
+            }
+            Instructor instructor = instructorService.getInstructorByEmail(u.getEmail());
+            if (instructor != null) {
+                response.put("instructorId", String.valueOf(instructor.getInstructor_id()));
+            }
+            return ResponseEntity.ok(response);
         }).orElse(ResponseEntity.notFound().build());
     }
 }
