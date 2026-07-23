@@ -107,6 +107,20 @@ public class AdminController {
         }).orElse("Error: User not found");
     }
 
+    // ── Delete non-admin user (and their Observer/Instructor profiles) ────
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        return userRepository.findById(id).map(user -> {
+            if (user.getRoles().contains(Roles.ADMIN)) {
+                return ResponseEntity.badRequest().body("Error: use /api/admins/{id} to delete an admin");
+            }
+            observerRepo.findByEmail(user.getEmail()).ifPresent(observerRepo::delete);
+            instructorRepo.findByEmail(user.getEmail()).ifPresent(instructorRepo::delete);
+            userRepository.deleteById(id);
+            return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     // ── List all non-admin users ──────────────────────────────────────────
     @GetMapping("/all-users")
     public List<Map<String, Object>> getAllUsers() {
