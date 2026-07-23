@@ -39,5 +39,7 @@ public class Users {
     private Set<Roles> roles = new HashSet<>();
 
     private boolean canEditContent = false;
+
+    private String activeRole;
 }
 
