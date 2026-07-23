@@ -59,25 +59,32 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email already exists");
         }
 
-        // Every new account gets both Observer and Instructor capabilities
+        boolean isObserver = user.getRoles() != null && user.getRoles().contains(Roles.OBSERVER);
+        boolean isInstructor = user.getRoles() != null && user.getRoles().contains(Roles.INSTRUCTOR);
+        if (isObserver == isInstructor) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please select a role: Observer or Instructor");
+        }
+
         Set<Roles> roles = new HashSet<>();
-        roles.add(Roles.OBSERVER);
-        roles.add(Roles.INSTRUCTOR);
+        roles.add(isObserver ? Roles.OBSERVER : Roles.INSTRUCTOR);
         user.setRoles(roles);
+        user.setActiveRole(isObserver ? "OBSERVER" : "INSTRUCTOR");
 
         Users newUser = usersService.registerUser(user);
 
-        Observer observer = new Observer();
-        observer.setFirstname(newUser.getFirstName());
-        observer.setLastname(newUser.getLastName());
-        observer.setEmail(newUser.getEmail());
-        observerRepository.save(observer);
-
-        Instructor instructor = new Instructor();
-        instructor.setFirstname(newUser.getFirstName());
-        instructor.setLastname(newUser.getLastName());
-        instructor.setEmail(newUser.getEmail());
-        instructorRepository.save(instructor);
+        if (isObserver) {
+            Observer observer = new Observer();
+            observer.setFirstname(newUser.getFirstName());
+            observer.setLastname(newUser.getLastName());
+            observer.setEmail(newUser.getEmail());
+            observerRepository.save(observer);
+        } else {
+            Instructor instructor = new Instructor();
+            instructor.setFirstname(newUser.getFirstName());
+            instructor.setLastname(newUser.getLastName());
+            instructor.setEmail(newUser.getEmail());
+            instructorRepository.save(instructor);
+        }
 
         return ResponseEntity.ok(newUser);
     }
