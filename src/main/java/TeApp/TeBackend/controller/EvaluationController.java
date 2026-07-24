@@ -139,11 +139,18 @@ public class EvaluationController {
             return ResponseEntity.notFound().build();
         }
 
-        emailService.sendObservationCompleteEmail(
-                instructor.getEmail(),
-                instructor.getFirstname() + " " + instructor.getLastname(),
-                observerName
-        );
+        try {
+            emailService.sendObservationCompleteEmail(
+                    instructor.getEmail(),
+                    instructor.getFirstname() + " " + instructor.getLastname(),
+                    observerName
+            );
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "message", "Could not notify the instructor by email",
+                    "reason", e.getMessage() == null ? e.toString() : e.getMessage()
+            ));
+        }
         return ResponseEntity.ok(Map.of("message", "Notification sent to instructor"));
     }
 }
