@@ -84,7 +84,15 @@ public class AdminController {
         notification.setTargetRole(Roles.ADMIN);
         notificationRepo.save(notification);
 
-        emailService.sendAdminWelcomeEmail(user.getFirstName(), user.getLastName(), user.getEmail(), tempPassword);
+        try {
+            emailService.sendAdminWelcomeEmail(user.getFirstName(), user.getLastName(), user.getEmail(), tempPassword);
+        } catch (Exception e) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("user", user);
+            body.put("emailWarning", "Account was created, but the welcome email failed to send: "
+                    + EmailService.describeError(e));
+            return ResponseEntity.ok(body);
+        }
 
         return ResponseEntity.ok(user);
     }

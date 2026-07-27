@@ -1,69 +1,43 @@
 package TeApp.TeBackend.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class EmailService {
 
-    private static final String BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+    private final JavaMailSender mailSender;
 
-    @Value("${brevo.api.key}")
-    private String apiKey;
-
-    @Value("${brevo.sender.email}")
+    @Value("${spring.mail.username}")
     private String senderEmail;
 
-    @Value("${brevo.sender.name:Peer Lens}")
+    @Value("${mail.sender.name:Peer Lens}")
     private String senderName;
 
-    private final HttpClient httpClient = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(5))
-            .build();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    public EmailService(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
 
     private void send(String toEmail, String subject, String textContent) {
-        if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException("BREVO_API_KEY is not configured");
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(senderName + " <" + senderEmail + ">");
+        message.setTo(toEmail);
+        message.setSubject(subject);
+        message.setText(textContent);
+        mailSender.send(message);
+    }
+
+    // Walks to the innermost cause so SMTP errors (e.g. Gmail auth failures)
+    // are visible in the API response instead of only in server logs.
+    public static String describeError(Throwable t) {
+        Throwable cause = t;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
         }
-
-        Map<String, Object> payload = Map.of(
-                "sender", Map.of("name", senderName, "email", senderEmail),
-                "to", List.of(Map.of("email", toEmail)),
-                "subject", subject,
-                "textContent", textContent
-        );
-
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(BREVO_API_URL))
-                    .timeout(Duration.ofSeconds(10))
-                    .header("api-key", apiKey)
-                    .header("Content-Type", "application/json")
-                    .header("accept", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(payload)))
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() >= 300) {
-                throw new RuntimeException("Brevo API error " + response.statusCode() + ": " + response.body());
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to send email via Brevo", e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Email send interrupted", e);
-        }
+        String msg = cause.getMessage();
+        return msg != null ? msg : cause.toString();
     }
 
     public void sendAdminWelcomeEmail(String firstName, String lastName, String toEmail, String password) {

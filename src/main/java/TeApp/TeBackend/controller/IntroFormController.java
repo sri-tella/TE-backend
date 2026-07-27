@@ -66,7 +66,14 @@ public class IntroFormController {
             return ResponseEntity.badRequest().body("Observer email is required");
         }
 
-        emailService.sendInstructorFormCompleteEmail(observerEmail, instructorName);
+        try {
+            emailService.sendInstructorFormCompleteEmail(observerEmail, instructorName);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "message", "Could not notify the observer by email",
+                    "reason", EmailService.describeError(e)
+            ));
+        }
         return ResponseEntity.ok(Map.of("message", "Notification sent to observer"));
     }
 }

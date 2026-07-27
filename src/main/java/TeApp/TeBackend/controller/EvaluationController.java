@@ -148,7 +148,7 @@ public class EvaluationController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of(
                     "message", "Could not notify the instructor by email",
-                    "reason", e.getMessage() == null ? e.toString() : e.getMessage()
+                    "reason", EmailService.describeError(e)
             ));
         }
         return ResponseEntity.ok(Map.of("message", "Notification sent to instructor"));
