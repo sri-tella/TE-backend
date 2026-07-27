@@ -27,12 +27,17 @@ public class EmailService {
     @Value("${brevo.sender.name:Peer Lens}")
     private String senderName;
 
+    @Value("${site.url:https://teaching-evaluation.netlify.app}")
+    private String siteUrl;
+
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private void send(String toEmail, String subject, String textContent) {
+    // Every email gets the same login link + sign-off appended here, so
+    // individual templates below only need to write their core message.
+    private void send(String toEmail, String subject, String bodyIntro) {
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("Cannot send email: BREVO_API_KEY is not set");
         }
@@ -42,6 +47,8 @@ public class EmailService {
         if (toEmail == null || toEmail.isBlank()) {
             throw new IllegalStateException("Cannot send email: recipient has no email address on file");
         }
+
+        String textContent = bodyIntro + "\n\nLog in at " + siteUrl + "\n\nThank you!";
 
         Map<String, Object> payload = Map.of(
                 "sender", Map.of("name", senderName, "email", senderEmail),
@@ -90,18 +97,15 @@ public class EmailService {
                         "Your login credentials:\n" +
                         "Email: " + toEmail + "\n" +
                         "Password: " + password + "\n\n" +
-                        "Please log in and change your password immediately.\n\n" +
-                        "Thank you!"
+                        "Please log in and change your password immediately."
         );
     }
 
     public void sendInstructorFormCompleteEmail(String observerEmail, String instructorName) {
         send(observerEmail, "Session Questionnaire Completed – Ready for Observation",
                 "Hello,\n\n" +
-                        "Instructor " + instructorName + " has completed their pre-observation questionnaire.\n\n" +
-                        "Their session details are now available in the system. You can proceed with scheduling or conducting the observation.\n\n" +
-                        "Log in to Peer Lens to review the session information.\n\n" +
-                        "Thank you!"
+                        "Instructor " + instructorName + " has completed their pre-observation questionnaire and assigned you as the observer.\n\n" +
+                        "Their session details are now available in the system. You can proceed with scheduling or conducting the observation."
         );
     }
 
@@ -115,8 +119,8 @@ public class EmailService {
                 "Observer: " + observerName + "\n" +
                 "Instructor: " + instructorName + "\n\n" +
                 "You'll get an email at each step: Step 1 (Evaluation), Step 2 (Recommendations), and the Final Report.";
-        send(instructorEmail, subject, "Hello " + instructorName + ",\n\n" + detail + "\n\nThank you!");
-        send(observerEmail, subject, "Hello " + observerName + ",\n\n" + detail + "\n\nThank you!");
+        send(instructorEmail, subject, "Hello " + instructorName + ",\n\n" + detail);
+        send(observerEmail, subject, "Hello " + observerName + ",\n\n" + detail);
     }
 
     public void sendEvaluationStepCompleteEmail(String instructorEmail, String instructorName,
@@ -125,20 +129,18 @@ public class EmailService {
         String subject = "Peer Lens: Step " + stepNumber + " of " + totalSteps + " Complete – " + className;
         String detail = "Step " + stepNumber + " of " + totalSteps + " (" + stepLabel + ") is complete for \"" + className + "\".\n\n" +
                 "Observer: " + observerName + "\n" +
-                "Instructor: " + instructorName + "\n\n" +
-                "Log in to Peer Lens to check the latest status.";
-        send(instructorEmail, subject, "Hello " + instructorName + ",\n\n" + detail + "\n\nThank you!");
-        send(observerEmail, subject, "Hello " + observerName + ",\n\n" + detail + "\n\nThank you!");
+                "Instructor: " + instructorName;
+        send(instructorEmail, subject, "Hello " + instructorName + ",\n\n" + detail);
+        send(observerEmail, subject, "Hello " + observerName + ",\n\n" + detail);
     }
 
     public void sendEvaluationCompleteEmail(String instructorEmail, String instructorName,
                                              String observerEmail, String observerName, String className) {
         String subject = "Peer Lens: Everything's Ready – " + className;
-        String detail = "The observation of \"" + className + "\" is fully complete — the final report is ready.\n\n" +
+        String detail = "The observation of \"" + className + "\" is fully complete — the final report is ready to view.\n\n" +
                 "Observer: " + observerName + "\n" +
-                "Instructor: " + instructorName + "\n\n" +
-                "Log in to Peer Lens to view the full report.";
-        send(instructorEmail, subject, "Hello " + instructorName + ",\n\n" + detail + "\n\nThank you!");
-        send(observerEmail, subject, "Hello " + observerName + ",\n\n" + detail + "\n\nThank you!");
+                "Instructor: " + instructorName;
+        send(instructorEmail, subject, "Hello " + instructorName + ",\n\n" + detail);
+        send(observerEmail, subject, "Hello " + observerName + ",\n\n" + detail);
     }
 }

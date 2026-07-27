@@ -39,6 +39,12 @@ public class ClassInfo {
     @ManyToOne
     private Instructor instructor;
 
+    // The observer the instructor assigned during session setup. Many
+    // ClassInfo rows (from different instructors, or the same one) can
+    // point at the same Observer.
+    @ManyToOne
+    private Observer observer;
+
     @OneToMany(mappedBy = "className", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Evaluation> evaluations;

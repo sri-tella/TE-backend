@@ -13,6 +13,7 @@ public class introFormDTO {
     private String instructorFirstName;
     private String instructorLastName;
     private String instructorEmail;
+    private Long observerId;
 
     private String courseTitle;
     private String courseDescription;

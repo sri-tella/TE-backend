@@ -35,6 +35,14 @@ public class IntroFormController {
         if (formDTO.getInstructorEmail() == null || formDTO.getInstructorEmail().isBlank()) {
             return ResponseEntity.badRequest().body("Instructor email is required");
         }
+        if (formDTO.getObserverId() == null) {
+            return ResponseEntity.badRequest().body("Please select an observer");
+        }
+
+        Observer observer = observerService.getObserverById(formDTO.getObserverId());
+        if (observer == null) {
+            return ResponseEntity.badRequest().body("Selected observer was not found");
+        }
 
         Instructor instructor = instructorService.getInstructorByEmail(formDTO.getInstructorEmail());
 
@@ -56,36 +64,18 @@ public class IntroFormController {
         classInfo.setOutline(formDTO.getOutline());
         classInfo.setHelp(formDTO.getHelp());
         classInfo.setInstructor(instructor);
+        classInfo.setObserver(observer);
         classInfoService.saveClassInfo(classInfo);
 
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/instructor/notify-observer")
-    public ResponseEntity<?> notifyObserver(@RequestBody Map<String, String> body) {
-        String observerEmail = body.get("observerEmail");
-        String instructorEmail = body.get("instructorEmail");
-        String instructorName = body.get("instructorName");
-
-        if (observerEmail == null || observerEmail.isBlank()) {
-            return ResponseEntity.badRequest().body("Observer email is required");
-        }
-
-        if (instructorEmail != null && !instructorEmail.isBlank()) {
-            Instructor instructor = instructorService.getInstructorByEmail(instructorEmail);
-            if (instructor != null) {
-                instructorName = instructor.getFirstname() + " " + instructor.getLastname();
-            }
-        }
-
+        String instructorName = instructor.getFirstname() + " " + instructor.getLastname();
         try {
-            emailService.sendInstructorFormCompleteEmail(observerEmail, instructorName);
+            emailService.sendInstructorFormCompleteEmail(observer.getEmail(), instructorName);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of(
-                    "message", "Could not notify the observer by email",
-                    "reason", EmailService.describeError(e)
+            return ResponseEntity.ok(Map.of(
+                    "emailWarning", "Session saved, but could not notify the observer by email: "
+                            + EmailService.describeError(e)
             ));
         }
-        return ResponseEntity.ok(Map.of("message", "Notification sent to observer"));
+        return ResponseEntity.ok(Map.of("message", "Session saved, observer notified"));
     }
 }
