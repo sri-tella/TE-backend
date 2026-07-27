@@ -93,37 +93,53 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> loginUser(@RequestBody Users user) {
         Users existingUser = usersService.findByEmail(user.getEmail());
         if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
-            Map<String, String> response = new HashMap<>();
+            Map<String, String> response = buildUserResponse(existingUser);
             response.put("message", "Login successful");
-            response.put("userId", String.valueOf(existingUser.getId()));
-            response.put("firstName", existingUser.getFirstName());
-            response.put("lastName", existingUser.getLastName());
-            response.put("email", existingUser.getEmail());
-            response.put("roles", existingUser.getRoles().toString());
-            response.put("canEditContent", String.valueOf(existingUser.isCanEditContent()));
-            response.put("activeRole", existingUser.getActiveRole() != null ? existingUser.getActiveRole() : "");
-
-            Observer observer = observerService.getObserverByEmail(existingUser.getEmail());
-            if (observer == null && existingUser.getRoles().stream().anyMatch(r -> r.name().equals("ADMIN"))) {
-                observer = new Observer();
-                observer.setFirstname(existingUser.getFirstName());
-                observer.setLastname(existingUser.getLastName());
-                observer.setEmail(existingUser.getEmail());
-                observerRepository.save(observer);
-            }
-            if (observer != null) {
-                response.put("observerId", String.valueOf(observer.getObserver_id()));
-            }
-
-            Instructor instructor = instructorService.getInstructorByEmail(existingUser.getEmail());
-            if (instructor != null) {
-                response.put("instructorId", String.valueOf(instructor.getInstructor_id()));
-            }
             return ResponseEntity.ok(response);
         }
         Map<String, String> response = new HashMap<>();
         response.put("error", "Invalid credentials");
         return ResponseEntity.status(401).body(response);
+    }
+
+    // Lets an already-logged-in client refresh its own roles/activeRole without
+    // requiring a logout+login - e.g. after an admin grants a new role.
+    @GetMapping("/user/{id}")
+    public ResponseEntity<Map<String, String>> getUser(@PathVariable Long id) {
+        Users existingUser = usersRepo.findById(id).orElse(null);
+        if (existingUser == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(buildUserResponse(existingUser));
+    }
+
+    private Map<String, String> buildUserResponse(Users existingUser) {
+        Map<String, String> response = new HashMap<>();
+        response.put("userId", String.valueOf(existingUser.getId()));
+        response.put("firstName", existingUser.getFirstName());
+        response.put("lastName", existingUser.getLastName());
+        response.put("email", existingUser.getEmail());
+        response.put("roles", existingUser.getRoles().toString());
+        response.put("canEditContent", String.valueOf(existingUser.isCanEditContent()));
+        response.put("activeRole", existingUser.getActiveRole() != null ? existingUser.getActiveRole() : "");
+
+        Observer observer = observerService.getObserverByEmail(existingUser.getEmail());
+        if (observer == null && existingUser.getRoles().stream().anyMatch(r -> r.name().equals("ADMIN"))) {
+            observer = new Observer();
+            observer.setFirstname(existingUser.getFirstName());
+            observer.setLastname(existingUser.getLastName());
+            observer.setEmail(existingUser.getEmail());
+            observerRepository.save(observer);
+        }
+        if (observer != null) {
+            response.put("observerId", String.valueOf(observer.getObserver_id()));
+        }
+
+        Instructor instructor = instructorService.getInstructorByEmail(existingUser.getEmail());
+        if (instructor != null) {
+            response.put("instructorId", String.valueOf(instructor.getInstructor_id()));
+        }
+        return response;
     }
 
     @PostMapping("/change-password")
