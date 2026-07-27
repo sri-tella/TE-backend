@@ -21,6 +21,13 @@ public class EmailService {
     }
 
     private void send(String toEmail, String subject, String textContent) {
+        if (senderEmail == null || senderEmail.isBlank()) {
+            throw new IllegalStateException("Cannot send email: GMAIL_USERNAME is not set (sender address is empty)");
+        }
+        if (toEmail == null || toEmail.isBlank()) {
+            throw new IllegalStateException("Cannot send email: recipient has no email address on file");
+        }
+
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(senderName + " <" + senderEmail + ">");
         message.setTo(toEmail);
