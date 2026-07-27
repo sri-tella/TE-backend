@@ -13,19 +13,19 @@ import java.util.Map;
 @RequestMapping("/api/debug")
 public class DebugController {
 
-    @Value("${spring.mail.username:}")
-    private String mailUsername;
+    @Value("${brevo.api.key:}")
+    private String brevoApiKey;
 
-    @Value("${spring.mail.password:}")
-    private String mailPassword;
+    @Value("${brevo.sender.email:}")
+    private String brevoSenderEmail;
 
     @GetMapping("/mail-config")
     public Map<String, Object> mailConfig() {
         return Map.of(
-                "gmailUsernameSet", !mailUsername.isBlank(),
-                "gmailUsernameLength", mailUsername.length(),
-                "gmailAppPasswordSet", !mailPassword.isBlank(),
-                "gmailAppPasswordLength", mailPassword.length()
+                "brevoApiKeySet", !brevoApiKey.isBlank(),
+                "brevoApiKeyLength", brevoApiKey.length(),
+                "brevoSenderEmailSet", !brevoSenderEmail.isBlank(),
+                "brevoSenderEmail", brevoSenderEmail
         );
     }
 }
