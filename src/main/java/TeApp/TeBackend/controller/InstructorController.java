@@ -3,6 +3,7 @@ package TeApp.TeBackend.controller;
 import TeApp.TeBackend.entity.Instructor;
 import TeApp.TeBackend.service.InstructorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,8 +16,11 @@ public class InstructorController {
     private InstructorService instructorService;
 
     @PostMapping
-    public Instructor createInstructor(@RequestBody Instructor instructor) {
-        return instructorService.saveInstructor(instructor);
+    public ResponseEntity<?> createInstructor(@RequestBody Instructor instructor) {
+        if (instructor.getEmail() == null || instructor.getEmail().isBlank()) {
+            return ResponseEntity.badRequest().body("Instructor email is required");
+        }
+        return ResponseEntity.ok(instructorService.saveInstructor(instructor));
     }
 
     @GetMapping

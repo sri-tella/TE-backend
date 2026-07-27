@@ -16,8 +16,11 @@ public class ObserverController {
     private ObserverService observerService;
 
     @PostMapping
-    public Observer createObserver(@RequestBody Observer observer) {
-        return observerService.saveObserver(observer);
+    public ResponseEntity<?> createObserver(@RequestBody Observer observer) {
+        if (observer.getEmail() == null || observer.getEmail().isBlank()) {
+            return ResponseEntity.badRequest().body("Observer email is required");
+        }
+        return ResponseEntity.ok(observerService.saveObserver(observer));
     }
 
     @GetMapping

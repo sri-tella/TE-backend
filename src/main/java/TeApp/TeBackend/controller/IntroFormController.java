@@ -31,7 +31,11 @@ public class IntroFormController {
     private EmailService emailService;
 
     @PostMapping("/instructor")
-    public ResponseEntity<Void> submitIntstructorForm(@RequestBody introFormDTO formDTO) {
+    public ResponseEntity<?> submitIntstructorForm(@RequestBody introFormDTO formDTO) {
+        if (formDTO.getInstructorEmail() == null || formDTO.getInstructorEmail().isBlank()) {
+            return ResponseEntity.badRequest().body("Instructor email is required");
+        }
+
         Instructor instructor = instructorService.getInstructorByEmail(formDTO.getInstructorEmail());
 
         if (instructor == null) {
