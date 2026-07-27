@@ -111,6 +111,17 @@ public class EvaluationController {
         evaluation.setDate(dto.getDate());
 
         Evaluation saved = evaluationRepository.save(evaluation);
+
+        try {
+            emailService.sendEvaluationStartedEmail(
+                    instructor.getEmail(), instructor.getFirstname() + " " + instructor.getLastname(),
+                    observer.getEmail(), observer.getFirstname() + " " + observer.getLastname(),
+                    classInfo.getTitle()
+            );
+        } catch (Exception ignored) {
+            // Best-effort: don't block starting the evaluation over a mail hiccup.
+        }
+
         return ResponseEntity.ok(saved);
     }
 
@@ -127,38 +138,49 @@ public class EvaluationController {
 
     @PostMapping("/notify-instructor")
     public ResponseEntity<?> notifyInstructor(@RequestBody Map<String, String> body) {
+        return notifyStep(body, 1, "Evaluation");
+    }
+
+    @PostMapping("/notify-recommendations")
+    public ResponseEntity<?> notifyRecommendations(@RequestBody Map<String, String> body) {
+        return notifyStep(body, 2, "Recommendations");
+    }
+
+    private ResponseEntity<?> notifyStep(Map<String, String> body, int stepNumber, String stepLabel) {
         String instructorIdStr = body.get("instructorId");
         String observerIdStr = body.get("observerId");
+        String classIdStr = body.get("classId");
 
-        if (instructorIdStr == null) {
-            return ResponseEntity.badRequest().body("instructorId is required");
+        if (instructorIdStr == null || observerIdStr == null) {
+            return ResponseEntity.badRequest().body("instructorId and observerId are required");
         }
 
         Instructor instructor = instructorService.getInstructorById(Long.parseLong(instructorIdStr));
-        if (instructor == null) {
+        Observer observer = observerService.getObserverById(Long.parseLong(observerIdStr));
+        if (instructor == null || observer == null) {
             return ResponseEntity.notFound().build();
         }
 
-        String observerName = body.get("observerName");
-        if (observerIdStr != null) {
-            Observer observer = observerService.getObserverById(Long.parseLong(observerIdStr));
-            if (observer != null) {
-                observerName = observer.getFirstname() + " " + observer.getLastname();
+        String className = "your session";
+        if (classIdStr != null) {
+            ClassInfo classInfo = classInfoService.getClassById(Long.parseLong(classIdStr));
+            if (classInfo != null && classInfo.getTitle() != null) {
+                className = classInfo.getTitle();
             }
         }
 
         try {
-            emailService.sendObservationCompleteEmail(
-                    instructor.getEmail(),
-                    instructor.getFirstname() + " " + instructor.getLastname(),
-                    observerName
+            emailService.sendEvaluationStepCompleteEmail(
+                    instructor.getEmail(), instructor.getFirstname() + " " + instructor.getLastname(),
+                    observer.getEmail(), observer.getFirstname() + " " + observer.getLastname(),
+                    className, stepNumber, 3, stepLabel
             );
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of(
-                    "message", "Could not notify the instructor by email",
+                    "message", "Could not send the step " + stepNumber + " notification",
                     "reason", EmailService.describeError(e)
             ));
         }
-        return ResponseEntity.ok(Map.of("message", "Notification sent to instructor"));
+        return ResponseEntity.ok(Map.of("message", "Notification sent"));
     }
 }

@@ -105,13 +105,40 @@ public class EmailService {
         );
     }
 
-    public void sendObservationCompleteEmail(String instructorEmail, String instructorName, String observerName) {
-        send(instructorEmail, "Your Observation Has Been Completed",
-                "Hello " + instructorName + ",\n\n" +
-                        "Observer " + observerName + " has completed the observation of your session.\n\n" +
-                        "Your evaluation report and recommendations will be available shortly in Peer Lens.\n\n" +
-                        "Log in to your account to view the results.\n\n" +
-                        "Thank you!"
-        );
+    // ---- Evaluation progress emails: sent to both instructor and observer
+    // at each stage so either side can see where things stand. ----
+
+    public void sendEvaluationStartedEmail(String instructorEmail, String instructorName,
+                                            String observerEmail, String observerName, String className) {
+        String subject = "Peer Lens: Observation Started – " + className;
+        String detail = "An observation session for \"" + className + "\" has just started.\n" +
+                "Observer: " + observerName + "\n" +
+                "Instructor: " + instructorName + "\n\n" +
+                "You'll get an email at each step: Step 1 (Evaluation), Step 2 (Recommendations), and the Final Report.";
+        send(instructorEmail, subject, "Hello " + instructorName + ",\n\n" + detail + "\n\nThank you!");
+        send(observerEmail, subject, "Hello " + observerName + ",\n\n" + detail + "\n\nThank you!");
+    }
+
+    public void sendEvaluationStepCompleteEmail(String instructorEmail, String instructorName,
+                                                 String observerEmail, String observerName, String className,
+                                                 int stepNumber, int totalSteps, String stepLabel) {
+        String subject = "Peer Lens: Step " + stepNumber + " of " + totalSteps + " Complete – " + className;
+        String detail = "Step " + stepNumber + " of " + totalSteps + " (" + stepLabel + ") is complete for \"" + className + "\".\n\n" +
+                "Observer: " + observerName + "\n" +
+                "Instructor: " + instructorName + "\n\n" +
+                "Log in to Peer Lens to check the latest status.";
+        send(instructorEmail, subject, "Hello " + instructorName + ",\n\n" + detail + "\n\nThank you!");
+        send(observerEmail, subject, "Hello " + observerName + ",\n\n" + detail + "\n\nThank you!");
+    }
+
+    public void sendEvaluationCompleteEmail(String instructorEmail, String instructorName,
+                                             String observerEmail, String observerName, String className) {
+        String subject = "Peer Lens: Everything's Ready – " + className;
+        String detail = "The observation of \"" + className + "\" is fully complete — the final report is ready.\n\n" +
+                "Observer: " + observerName + "\n" +
+                "Instructor: " + instructorName + "\n\n" +
+                "Log in to Peer Lens to view the full report.";
+        send(instructorEmail, subject, "Hello " + instructorName + ",\n\n" + detail + "\n\nThank you!");
+        send(observerEmail, subject, "Hello " + observerName + ",\n\n" + detail + "\n\nThank you!");
     }
 }

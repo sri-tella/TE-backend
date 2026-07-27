@@ -2,6 +2,8 @@ package TeApp.TeBackend.service;
 
 import TeApp.TeBackend.dto.reportSummaryDTO;
 import TeApp.TeBackend.entity.Evaluation;
+import TeApp.TeBackend.entity.Instructor;
+import TeApp.TeBackend.entity.Observer;
 import TeApp.TeBackend.entity.Report;
 import TeApp.TeBackend.repository.EvaluationRepo;
 import TeApp.TeBackend.repository.ReportRepo;
@@ -22,6 +24,9 @@ public class ReportService {
     @Autowired
     private EvaluationRepo evaluationRepository;
 
+    @Autowired
+    private EmailService emailService;
+
     public void savePdfReport(MultipartFile file, Long evaluationId, String reportContent) throws IOException {
         Evaluation evaluation = evaluationRepository.findById(evaluationId)
                 .orElseThrow(() -> new RuntimeException("Evaluation not found"));
@@ -32,6 +37,20 @@ public class ReportService {
         report.setReportContent(reportContent);
         report.setCreatedAt(LocalDateTime.now());
         reportRepository.save(report);
+
+        Instructor instructor = evaluation.getInstructor();
+        Observer observer = evaluation.getObserver();
+        if (instructor != null && observer != null) {
+            try {
+                emailService.sendEvaluationCompleteEmail(
+                        instructor.getEmail(), instructor.getFirstname() + " " + instructor.getLastname(),
+                        observer.getEmail(), observer.getFirstname() + " " + observer.getLastname(),
+                        evaluation.getClassName() != null ? evaluation.getClassName().getTitle() : "your session"
+                );
+            } catch (Exception ignored) {
+                // Best-effort: the report is already saved successfully at this point.
+            }
+        }
     }
 
     public List<reportSummaryDTO> getAllReports() {
