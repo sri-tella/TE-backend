@@ -64,10 +64,18 @@ public class IntroFormController {
     @PostMapping("/instructor/notify-observer")
     public ResponseEntity<?> notifyObserver(@RequestBody Map<String, String> body) {
         String observerEmail = body.get("observerEmail");
+        String instructorEmail = body.get("instructorEmail");
         String instructorName = body.get("instructorName");
 
         if (observerEmail == null || observerEmail.isBlank()) {
             return ResponseEntity.badRequest().body("Observer email is required");
+        }
+
+        if (instructorEmail != null && !instructorEmail.isBlank()) {
+            Instructor instructor = instructorService.getInstructorByEmail(instructorEmail);
+            if (instructor != null) {
+                instructorName = instructor.getFirstname() + " " + instructor.getLastname();
+            }
         }
 
         try {

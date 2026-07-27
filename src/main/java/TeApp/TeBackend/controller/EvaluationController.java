@@ -128,7 +128,7 @@ public class EvaluationController {
     @PostMapping("/notify-instructor")
     public ResponseEntity<?> notifyInstructor(@RequestBody Map<String, String> body) {
         String instructorIdStr = body.get("instructorId");
-        String observerName = body.get("observerName");
+        String observerIdStr = body.get("observerId");
 
         if (instructorIdStr == null) {
             return ResponseEntity.badRequest().body("instructorId is required");
@@ -137,6 +137,14 @@ public class EvaluationController {
         Instructor instructor = instructorService.getInstructorById(Long.parseLong(instructorIdStr));
         if (instructor == null) {
             return ResponseEntity.notFound().build();
+        }
+
+        String observerName = body.get("observerName");
+        if (observerIdStr != null) {
+            Observer observer = observerService.getObserverById(Long.parseLong(observerIdStr));
+            if (observer != null) {
+                observerName = observer.getFirstname() + " " + observer.getLastname();
+            }
         }
 
         try {
