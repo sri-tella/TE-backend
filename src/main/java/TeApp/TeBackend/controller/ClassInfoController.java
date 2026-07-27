@@ -4,7 +4,9 @@ import TeApp.TeBackend.entity.ClassInfo;
 import TeApp.TeBackend.entity.Instructor;
 import TeApp.TeBackend.entity.Observer;
 import TeApp.TeBackend.service.ClassInfoService;
+import TeApp.TeBackend.service.ObserverService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -18,6 +20,9 @@ public class ClassInfoController {
 
     @Autowired
     private ClassInfoService classInfoService;
+
+    @Autowired
+    private ObserverService observerService;
 
     @PostMapping
     public ClassInfo createClass(@RequestBody ClassInfo classInfo) {
@@ -80,6 +85,22 @@ public class ClassInfoController {
         }
 
         return response;
+    }
+
+    @PatchMapping("/{id}/observer")
+    public ResponseEntity<?> setObserver(@PathVariable Long id, @RequestBody Map<String, Long> body) {
+        ClassInfo classInfo = classInfoService.getClassById(id);
+        if (classInfo == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Long observerId = body.get("observerId");
+        Observer observer = observerId != null ? observerService.getObserverById(observerId) : null;
+        if (observer == null) {
+            return ResponseEntity.badRequest().body("Observer not found");
+        }
+        classInfo.setObserver(observer);
+        classInfoService.saveClassInfo(classInfo);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}/archive")
