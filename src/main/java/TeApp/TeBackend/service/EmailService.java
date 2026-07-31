@@ -90,10 +90,10 @@ public class EmailService {
         return msg != null ? msg : cause.toString();
     }
 
-    public void sendAdminWelcomeEmail(String firstName, String lastName, String toEmail, String password) {
-        send(toEmail, "Admin Account Created",
+    public void sendAdminWelcomeEmail(String firstName, String lastName, String toEmail, String password, String role) {
+        send(toEmail, role + " Account Created",
                 "Hello " + firstName + " " + lastName + ",\n\n" +
-                        "You have been granted ADMIN access in TeachApp.\n\n" +
+                        "You have been granted " + role + " access in TeachApp.\n\n" +
                         "Your login credentials:\n" +
                         "Email: " + toEmail + "\n" +
                         "Password: " + password + "\n\n" +

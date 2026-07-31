@@ -47,8 +47,8 @@ public class AdminController {
         }
 
         String role = dto.getRole() != null ? dto.getRole().toUpperCase() : "OBSERVER";
-        if (!role.equals("OBSERVER") && !role.equals("INSTRUCTOR")) {
-            return ResponseEntity.badRequest().body("Error: role must be OBSERVER or INSTRUCTOR");
+        if (!role.equals("OBSERVER") && !role.equals("INSTRUCTOR") && !role.equals("ADMIN")) {
+            return ResponseEntity.badRequest().body("Error: role must be OBSERVER, INSTRUCTOR, or ADMIN");
         }
 
         String tempPassword = passwordGenerator.generate();
@@ -71,13 +71,15 @@ public class AdminController {
             obs.setLastname(user.getLastName());
             obs.setEmail(user.getEmail());
             observerRepo.save(obs);
-        } else {
+        } else if (role.equals("INSTRUCTOR")) {
             Instructor inst = new Instructor();
             inst.setFirstname(user.getFirstName());
             inst.setLastname(user.getLastName());
             inst.setEmail(user.getEmail());
             instructorRepo.save(inst);
         }
+        // ADMIN: no Observer/Instructor profile needed upfront - buildUserResponse()
+        // in AuthController lazily creates the Observer profile on first login.
 
         Notification notification = new Notification();
         notification.setMessage("New " + role + " account created: " + user.getFirstName() + " " + user.getLastName());
@@ -85,7 +87,7 @@ public class AdminController {
         notificationRepo.save(notification);
 
         try {
-            emailService.sendAdminWelcomeEmail(user.getFirstName(), user.getLastName(), user.getEmail(), tempPassword);
+            emailService.sendAdminWelcomeEmail(user.getFirstName(), user.getLastName(), user.getEmail(), tempPassword, role);
         } catch (Exception e) {
             Map<String, Object> body = new HashMap<>();
             body.put("user", user);
@@ -228,12 +230,15 @@ public class AdminController {
         roleRequestRepo.save(request);
 
         Users user = request.getUser();
+        // Notify via a role the user already had before the grant, since that's
+        // the notification feed they're actually looking at right now.
+        Roles existingRole = user.getRoles().stream().findFirst().orElse(request.getRequestedRole());
         user.getRoles().add(request.getRequestedRole());
         userRepository.save(user);
 
         Notification notification = new Notification();
         notification.setMessage("Your role request has been approved! You now have " + request.getRequestedRole() + " access.");
-        notification.setTargetRole(Roles.INSTRUCTOR);
+        notification.setTargetRole(existingRole);
         notificationRepo.save(notification);
 
         return "Request approved";
@@ -257,10 +262,11 @@ public class AdminController {
     public String requestDualRole(@RequestBody roleRequestDTO dto) {
         Optional<Users> userOptional = userRepository.findById(dto.getId());
         if (userOptional.isEmpty()) return "User not found";
-        if (roleRequestRepo.existsByUserAndStatus(userOptional, RequestStatus.PENDING)) return "You already have a pending request";
+        Users user = userOptional.get();
+        if (user.getRoles().contains(dto.getRequestedRole())) return "You already have that role";
+        if (roleRequestRepo.existsByUserAndStatus(user, RequestStatus.PENDING)) return "You already have a pending request";
 
         RoleRequest request = new RoleRequest();
-        Users user = userOptional.get();
         request.setUser(user);
         request.setRequestedRole(dto.getRequestedRole());
         request.setStatus(RequestStatus.PENDING);
